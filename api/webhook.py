@@ -1,17 +1,15 @@
 import os
-import json
-from http.server import BaseHTTPRequestHandler
-
+from fastapi import FastAPI, Request, Response
 from telegram import Update
-from telegram.ext import Application, CommandHandler
+from telegram.ext import Application, CommandHandler, ContextTypes
 
+TOKEN = os.environ.get("BOT_TOKEN")
 
-TOKEN = os.environ["BOT_TOKEN"]
+# إنشاء تطبيق التليجرام
+telegram_app = Application.builder().token(TOKEN).build()
 
-application = Application.builder().token(TOKEN).build()
-
-
-async def start(update: Update, context):
+# أمر البدء
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🤖 أهلاً بك في Artint AutoPublisher!\n\n"
         "اختر المجال الذي تريد متابعته لاحقًا:\n\n"
@@ -21,40 +19,26 @@ async def start(update: Update, context):
         "🎮 ألعاب"
     )
 
+telegram_app.add_handler(CommandHandler("start", start))
 
-application.add_handler(CommandHandler("start", start))
+# إنشاء تطبيق FastAPI
+app = FastAPI()
 
+@app.get("/")
+async def root():
+    return Response(content="Artint AutoPublisher is running", media_type="text/plain; charset=utf-8")
 
-class handler(BaseHTTPRequestHandler):
+@app.post("/webhook")
+async def webhook(request: Request):
+    try:
+        data = await request.json()
+        
+        # تهيئة البوت إذا لم يكن مهيأً
+        if not telegram_app._initialized:
+            await telegram_app.initialize()
 
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-Type", "text/plain; charset=utf-8")
-        self.end_headers()
-        self.wfile.write(b"Artint AutoPublisher is running")
-
-    def do_POST(self):
-        try:
-            content_length = int(self.headers.get("Content-Length", 0))
-            body = self.rfile.read(content_length)
-            data = json.loads(body.decode("utf-8"))
-
-            update = Update.de_json(data, application.bot)
-
-            import asyncio
-            asyncio.run(application.initialize())
-            asyncio.run(application.process_update(update))
-            asyncio.run(application.shutdown())
-
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(b'{"ok":true}')
-
-        except Exception as e:
-            self.send_response(500)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(
-                json.dumps({"ok": False, "error": str(e)}).encode("utf-8")
-            )
+        update = Update.de_json(data, telegram_app.bot)
+        await telegram_app.process_update(update)
+        return {"ok": True}
+    except Exception as e:
+        return Response(content=f'{{"ok": false, "error": "{str(e)}"}}', status_code=500, media_type="application/json")
