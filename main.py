@@ -1,4 +1,5 @@
 import os
+import json
 from fastapi import FastAPI, Request, Response
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
@@ -31,11 +32,17 @@ async def webhook(request: Request):
     try:
         data = await request.json()
         
-        # تهيئة البوت وتحديث البيانات
-        async with telegram_app:
-            update = Update.de_json(data, telegram_app.bot)
-            await telegram_app.process_update(update)
+        # تهيئة البوت ومعالجة التحديث
+        if not telegram_app._initialized:
+            await telegram_app.initialize()
+            
+        update = Update.de_json(data, telegram_app.bot)
+        await telegram_app.process_update(update)
             
         return {"ok": True}
     except Exception as e:
-        return Response(content=f'{{"ok": false, "error": "{str(e)}"}}', status_code=500, media_type="application/json")
+        return Response(
+            content=json.dumps({"ok": False, "error": str(e)}), 
+            status_code=500, 
+            media_type="application/json"
+        )
