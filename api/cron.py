@@ -28,6 +28,7 @@ from bot.telegram_api import get_bot  # noqa: E402
 _DB_READY = False
 
 
+
 def _ensure_db():
     global _DB_READY
     if not _DB_READY:
@@ -83,3 +84,5 @@ class handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.end_headers()
         self.wfile.write(body)
+app = handler
+
