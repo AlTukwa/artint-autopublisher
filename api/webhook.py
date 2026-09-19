@@ -1,4 +1,4 @@
-"""
+😳"""
 api/webhook.py
 
 نقطة استقبال Telegram Webhook على Vercel.
@@ -81,3 +81,5 @@ class handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.end_headers()
         self.wfile.write(body)
+app = handler
+
