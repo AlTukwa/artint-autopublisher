@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>مشاهد تائب - موشن جرافيك احترافي</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: #050d0a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* حاوية الفيديو 9:16 */
+        #video-container {
+            position: relative;
+            width: 100%;
+            max-width: 414px;
+            height: 100%;
+            max-height: 736px;
+            background: radial-gradient(circle at 50% 30%, #0d2218 0%, #050d0a 70%);
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            border-radius: 12px;
+        }
+
+        @media (min-aspect-ratio: 9/16) {
+            #video-container {
+                height: 95vh;
+                aspect-ratio: 9/16;
+            }
+        }
+
+        /* طبقات المشاهد */
+        .scene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1s ease-in-out, visibility 1s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 40px;
+        }
+
+        .scene.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* مساحة الرسوم (65% سفلي) ومساحة النصوص (30% علوي) */
+        .graphic-area {
+            position: relative;
+            width: 100%;
+            height: 70%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .top-space {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 30%;
+            pointer-events: none;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        /* أدوات التحكم والتحكم العلوي والسفلي */
+        .controls {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 100;
+            opacity: 0.3;
+            transition: opacity 0.3s;
+        }
+
+        #video-container:hover .controls {
+            opacity: 1;
+        }
+
+        .ctrl-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+        }
+
+        .ctrl-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .scene-indicator {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            letter-spacing: 1px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px 10px;
+            border-radius: 10px;
+        }
+
+        /* تأثيرات وجسيمات الضوء */
+        .dust-particle {
+            fill: #76ff03;
+            opacity: 0.3;
+            animation: floatDust 4s infinite ease-in-out;
+        }
+
+        @keyframes floatDust {
+            0%, 100% { transform: translateY(0px) scale(1); opacity: 0.2; }
+            50% { transform: translateY(-20px) scale(1.5); opacity: 0.6; }
+        }
+
+        /* حركات الـ Stickman المتقدمة (CSS Keyframes) */
+        @keyframes walkCycleLeftArm {
+            0%, 100% { transform: rotate(-15deg); transform-origin: 150px 320px; }
+            50% { transform: rotate(25deg); transform-origin: 150px 320px; }
+        }
+        @keyframes walkCycleRightArm {
+            0%, 100% { transform: rotate(25deg); transform-origin: 150px 320px; }
+            50% { transform: rotate(-15deg); transform-origin: 150px 320px; }
+        }
+        @keyframes walkCycleLeftLeg {
+            0%, 100% { transform: rotate(20deg); transform-origin: 150px 380px; }
+            50% { transform: rotate(-25deg); transform-origin: 150px 380px; }
+        }
+        @keyframes walkCycleRightLeg {
+            0%, 100% { transform: rotate(-25deg); transform-origin: 150px 380px; }
+            50% { transform: rotate(20deg); transform-origin: 150px 380px; }
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.02) translateY(1px); }
+        }
+
+        .breathing-body {
+            animation: breathe 3s infinite ease-in-out;
+            transform-origin: center bottom;
+        }
+
+        .walking-container {
+            animation: moveForward 6s linear infinite;
+        }
+
+        @keyframes moveForward {
+            0% { transform: translateX(-30px); }
+            50% { transform: translateX(20px); }
+            100% { transform: translateX(-30px); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="video-container">
+
+    <!-- مساحة النصوص العلوية (30% فارغة للمونتاج) -->
+    <div class="top-space"></div>
+
+    <!-- المشهد الأول: الذنب والشعور بالطرد -->
+    <div class="scene active" data-scene="1">
+        <div class="graphic-area">
+            <svg viewBox="0 0 300 500">
+                <ellipse cx="150" cy="350" rx="70" ry="15" fill="#000" opacity="0.5"/>
+                <radialGradient id="grad1" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#143828" stop-opacity="0.6"/>
+                    <stop offset="100%" stop-color="#050d0a" stop-opacity="0"/>
+                </radialGradient>
+                <circle cx="150" cy="300" r="120" fill="url(#grad1)"/>
+
+                <g class="breathing-body" transform="translate(0, 15)">
+                    <circle cx="150" cy="240" r="22" stroke="#d4edda" stroke-width="3" fill="#0b1a13"/>
+                    <path d="M150,262 C150,300 155,340 150,380" stroke="#d4edda" stroke-width="3.5" stroke-linecap="round"/>
+                    <path d="M150,280 C135,300 125,320 120,335" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M150,280 C165,300 175,320 180,335" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M150,380 L135,430 L125,445" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M150,380 L165,430 L175,445" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                </g>
+                <circle cx="90" cy="200" r="1.5" class="dust-particle" style="animation-delay: 0s;"/>
+                <circle cx="220" cy="250" r="2" class="dust-particle" style="animation-delay: 1.5s;"/>
+                <circle cx="130" cy="150" r="1" class="dust-particle" style="animation-delay: 2.5s;"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- المشهد الثاني: ألم القلب والندم -->
+    <div class="scene" data-scene="2">
+        <div class="graphic-area">
+            <svg viewBox="0 0 300 500">
+                <radialGradient id="heartGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#2ecc71" stop-opacity="0.4"/>
+                    <stop offset="100%" stop-color="#050d0a" stop-opacity="0"/>
+                </radialGradient>
+                <circle cx="150" cy="300" r="100" fill="url(#heartGlow)"/>
+
+                <circle cx="157" cy="295" fill="#2ecc71">
+                    <animate attributeName="r" values="4;12;4" dur="1.2s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0.3;0.8;0.3" dur="1.2s" repeatCount="indefinite"/>
+                </circle>
+
+                <g class="breathing-body">
+                    <circle cx="150" cy="250" r="22" stroke="#d4edda" stroke-width="3" fill="#0b1a13"/>
+                    <path d="M150,272 C150,310 145,340 145,380" stroke="#d4edda" stroke-width="3.5" stroke-linecap="round"/>
+                    <path d="M150,290 Q155,295 158,295" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M150,290 C135,310 125,320 120,330" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M145,380 L120,400 L105,415" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M145,380 L175,400 L190,415" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                </g>
+            </svg>
+        </div>
+    </div>
+
+    <!-- المشهد الثالث: ستر الله على العبد -->
+    <div class="scene" data-scene="3">
+        <div class="graphic-area">
+            <svg viewBox="0 0 300 500">
+                <path d="M0,0 Q60,250 10,500 L0,500 Z" fill="#081c13" opacity="0.8"/>
+                <path d="M300,0 Q240,250 290,500 L300,500 Z" fill="#081c13" opacity="0.8"/>
+                
+                <radialGradient id="veilGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#1b4d3e" stop-opacity="0.5"/>
+                    <stop offset="100%" stop-color="#050d0a" stop-opacity="0"/>
+                </radialGradient>
+                <circle cx="150" cy="300" r="110" fill="url(#veilGlow)"/>
+
+                <g class="breathing-body">
+                    <circle cx="150" cy="245" r="22" stroke="#d4edda" stroke-width="3" fill="#0b1a13"/>
+                    <path d="M150,267 L150,380" stroke="#d4edda" stroke-width="3.5" stroke-linecap="round"/>
+                    <path d="M150,290 L125,330" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M150,290 L175,330" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M150,380 L135,440" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M150,380 L165,440" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                </g>
+            </svg>
+        </div>
+    </div>
+
+    <!-- المشهد الرابع: التفكير في التوبة -->
+    <div class="scene" data-scene="4">
+        <div class="graphic-area">
+            <svg viewBox="0 0 300 500">
+                <rect x="110" y="150" width="80" height="220" rx="5" fill="#091811" stroke="#1b4d3e" stroke-width="3"/>
+                <rect x="146" y="150" width="8" height="220" fill="#76ff03">
+                    <animate attributeName="width" values="2;40;78" dur="6s" repeatCount="indefinite"/>
+                    <animate attributeName="x" values="149;130;111" dur="6s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0.3;0.7;1" dur="6s" repeatCount="indefinite"/>
+                </rect>
+
+                <g transform="translate(0, 10)">
+                    <circle cx="150" cy="280" r="22" stroke="#d4edda" stroke-width="3" fill="#0b1a13">
+                        <animate attributeName="cy" values="280;270;280" dur="4s" repeatCount="indefinite"/>
+                    </circle>
+                    <path d="M150,302 L150,400" stroke="#d4edda" stroke-width="3.5" stroke-linecap="round"/>
+                    <path d="M150,320 L130,350" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M150,320 L170,350" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M150,400 L135,455" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M150,400 L165,455" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                </g>
+            </svg>
+        </div>
+    </div>
+
+    <!-- المشهد الخامس: باب التوبة مفتوح والتقدم نحوه -->
+    <div class="scene" data-scene="5">
+        <div class="graphic-area">
+            <svg viewBox="0 0 300 500">
+                <polygon points="110,120 190,120 230,460 70,460" fill="#113825" opacity="0.5"/>
+                <ellipse cx="150" cy="460" rx="80" ry="20" fill="#2ecc71" opacity="0.3"/>
+
+                <g class="walking-container" transform="translate(0, 15)">
+                    <circle cx="150" cy="245" r="21" stroke="#d4edda" stroke-width="3" fill="#0b1a13"/>
+                    <path d="M150,266 L150,375" stroke="#d4edda" stroke-width="3.5" stroke-linecap="round"/>
+                    <path d="M150,290 L130,330" stroke="#d4edda" stroke-width="3" stroke-linecap="round" style="animation: walkCycleLeftArm 1.2s infinite ease-in-out;"/>
+                    <path d="M150,290 L170,330" stroke="#d4edda" stroke-width="3" stroke-linecap="round" style="animation: walkCycleRightArm 1.2s infinite ease-in-out;"/>
+                    <path d="M150,375 L135,430" stroke="#d4edda" stroke-width="3" stroke-linecap="round" style="animation: walkCycleLeftLeg 1.2s infinite ease-in-out;"/>
+                    <path d="M150,375 L165,430" stroke="#d4edda" stroke-width="3" stroke-linecap="round" style="animation: walkCycleRightLeg 1.2s infinite ease-in-out;"/>
+                </g>
+            </svg>
+        </div>
+    </div>
+
+    <!-- المشهد السادس: الوضوء والصلاة -->
+    <div class="scene" data-scene="6">
+        <div class="graphic-area">
+            <svg viewBox="0 0 300 500">
+                <circle cx="150" cy="430" r="10" stroke="#76ff03" fill="none">
+                    <animate attributeName="r" values="5;40" dur="2s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0.8;0" dur="2s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="150" cy="430" r="5" stroke="#4db6ac" fill="none">
+                    <animate attributeName="r" values="2;25" dur="2s" begin="0.8s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0.8;0" dur="2s" begin="0.8s" repeatCount="indefinite"/>
+                </circle>
+
+                <circle cx="150" cy="250" r="3" fill="#76ff03">
+                    <animate attributeName="cy" values="230;290" dur="1s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="1;0" dur="1s" repeatCount="indefinite"/>
+                </circle>
+
+                <g transform="translate(0, 40)">
+                    <circle cx="110" cy="380" r="18" stroke="#d4edda" stroke-width="3" fill="#0b1a13"/>
+                    <path d="M125,375 Q150,330 180,360" stroke="#d4edda" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+                    <path d="M115,385 L95,405" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M115,385 L125,405" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M180,360 Q195,380 190,405" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                </g>
+            </svg>
+        </div>
+    </div>
+
+    <!-- المشهد السابع: الدعاء -->
+    <div class="scene" data-scene="7">
+        <div class="graphic-area">
+            <svg viewBox="0 0 300 500">
+                <radialGradient id="duaGlow" cx="50%" cy="40%" r="60%">
+                    <stop offset="0%" stop-color="#1e4630" stop-opacity="0.6"/>
+                    <stop offset="100%" stop-color="#050d0a" stop-opacity="0"/>
+                </radialGradient>
+                <circle cx="150" cy="250" r="130" fill="url(#duaGlow)"/>
+
+                <path d="M150,80 L80,450" stroke="#76ff03" stroke-width="1" opacity="0.15"/>
+                <path d="M150,80 L220,450" stroke="#76ff03" stroke-width="1" opacity="0.15"/>
+
+                <g class="breathing-body" transform="translate(0, 20)">
+                    <circle cx="150" cy="230" r="22" stroke="#d4edda" stroke-width="3" fill="#0b1a13"/>
+                    <path d="M150,252 L150,370" stroke="#d4edda" stroke-width="3.5" stroke-linecap="round"/>
+                    <path d="M150,270 C130,230 135,210 142,205" stroke="#d4edda" stroke-width="3" stroke-linecap="round">
+                        <animate attributeName="d" values="M150,270 C130,230 135,210 142,205; M150,270 C130,225 135,205 142,200; M150,270 C130,230 135,210 142,205" dur="3s" repeatCount="indefinite"/>
+                    </path>
+                    <path d="M150,270 C170,230 165,210 158,205" stroke="#d4edda" stroke-width="3" stroke-linecap="round">
+                        <animate attributeName="d" values="M150,270 C170,230 165,210 158,205; M150,270 C170,225 165,205 158,200; M150,270 C170,230 165,210 158,205" dur="3s" repeatCount="indefinite"/>
+                    </path>
+                    <path d="M150,370 L125,410 L105,425" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M150,370 L175,410 L195,425" stroke="#d4edda" stroke-width="3" stroke-linecap="round"/>
+                </g>
+
+                <circle cx="140" cy="180" r="2" class="dust-particle" style="animation-delay: 0.2s;"/>
+                <circle cx="165" cy="160" r="1.5" class="dust-particle" style="animation-delay: 1s;"/>
+                <circle cx="150" cy="130" r="2.5" class="dust-particle" style="animation-delay: 2s;"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- المشهد الثامن: الرجوع والأمل (الخاتمة) -->
+    <div class="scene" data-scene="8">
+        <div class="graphic-area">
+            <svg viewBox="0 0 300 500">
+                <radialGradient id="finalGlow" cx="50%" cy="50%" r="60%">
+                    <stop offset="0%" stop-color="#2ecc71" stop-opacity="0.7"/>
+                    <stop offset="50%" stop-color="#14452f" stop-opacity="0.4"/>
+                    <stop offset="100%" stop-color="#050d0a" stop-opacity="0"/>
+                </radialGradient>
+                <circle cx="150" cy="300" r="150" fill="url(#finalGlow)"/>
+
+                <g class="breathing-body" transform="translate(0, 10)">
+                    <circle cx="150" cy="230" r="22" stroke="#ffffff" stroke-width="3.5" fill="#0b1a13"/>
+                    <path d="M150,252 L150,370" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M150,280 L125,320" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round"/>
+                    <path d="M150,280 L175,320" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round"/>
+                    <path d="M150,370 L135,435" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round"/>
+                    <path d="M150,370 L165,435" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round"/>
+                </g>
+            </svg>
+        </div>
+    </div>
+
+    <!-- شريط التحكم السفلي -->
+    <div class="controls">
+        <button class="ctrl-btn" onclick="prevScene()">السابق</button>
+        <div class="scene-indicator" id="indicator">المشهد 1 / 8</div>
+        <button class="ctrl-btn" onclick="nextScene()">التالي</button>
+    </div>
+
+</div>
+
+<script>
+    let currentScene = 1;
+    const totalScenes = 8;
+    const sceneDuration = 6000; // مدة كل مشهد 6 ثوانٍ
+    let timer;
+
+    function showScene(sceneNum) {
+        const scenes = document.querySelectorAll('.scene');
+        scenes.forEach(scene => scene.classList.remove('active'));
+
+        if (sceneNum > totalScenes) currentScene = 1;
+        else if (sceneNum < 1) currentScene = totalScenes;
+        else currentScene = sceneNum;
+
+        const activeElement = document.querySelector(`.scene[data-scene="${currentScene}"]`);
+        if (activeElement) {
+            activeElement.classList.add('active');
+        }
+
+        document.getElementById('indicator').innerText = `المشهد ${currentScene} / ${totalScenes}`;
+        
+        resetTimer();
+    }
+
+    function nextScene() {
+        showScene(currentScene + 1);
+    }
+
+    function prevScene() {
+        showScene(currentScene - 1);
+    }
+
+    function resetTimer() {
+        clearInterval(timer);
+        timer = setInterval(() => {
+            nextScene();
+        }, sceneDuration);
+    }
+
+    resetTimer();
+</script>
+
+</body>
+</html>
